@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 from .util import find_mol_graph
+from fractions import Fraction
 
 class symParser:
     '''
@@ -44,10 +45,11 @@ class symParser:
             for j in range(3):
                 line = f[5*i + 3+j].strip().split()
                 assert len(line) == 3, 'Wrong operation matrix! line: `{}`'.format(line)
+                # print(line)
                 op[:,j,i] = [float(x) for x in line]
             line = f[5*i + 3 + 3].split()
             if len(line) == 3:
-                sf[:, i] = [float(x) for x in line]
+                sf[:, i] = [float(Fraction(x)) for x in line]
             elif len(line) == 0:
                 sf[:, i] = 0.0
             else:
@@ -90,19 +92,19 @@ class symParser:
                         q_new = np.dot(q[:, j], op_mat[:, :, op])
                         q_new += sf_mat[:, op]
 
-                        half = 0.5 - self.sym_delta
+                        half = 0.5# - self.sym_delta
                         for c in range(3):
-                            if q_old[c] < -half:
+                            while q_old[c] < -half:
                                 q_old[c] += 1
-                            elif q_old[c] > 0.5:
+                            while q_old[c] > 0.5:
                                 q_old[c] -= 1
-                            if q_new[c] < -half:
+                            while q_new[c] < -half:
                                 q_new[c] += 1
-                            elif q_new[c] > 0.5:
+                            while q_new[c] > 0.5:
                                 q_new[c] -= 1
 
-                        # print(i+1, j+1, q_old, q_new)
                         q_dif = q_new - q_old
+                        # print(i+1, j+1, q_old, q_new, q_dif)
                         if np.dot(q_dif, q_dif) < 1e-3:
                             # print(i, j, op)
                             sym_atom.append(j)

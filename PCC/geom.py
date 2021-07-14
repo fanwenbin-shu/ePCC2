@@ -205,20 +205,22 @@ class geomParser():
                         else:
                             q_new = np.add(q, np.array(shift_vec)[:, None])
                             q_all = np.append(q_all, q_new, axis=1)
-                            ele_list.append(self.ele_list)
+                            ele_list = ele_list + self.ele_list
                             chg_all = np.append(chg_all, chg)
 
         q_all = np.dot(self.lattice_const, q_all)
 
         return q_all, ele_list, chg_all
 
-    def exclude_q(self, q_super, q=None, chg=None):
+    def exclude_q(self, q_super, q=None, ele_list=None, chg=None):
         if q is None: q = self.q
+        if ele_list is None: ele_list = ['X'] * self.Natom
         if chg is None: chg = np.zeros(self.Natom)
 
         Natom = list(q_super.shape)[-1]
 
         q_all = np.zeros([3,0])
+        ele_all = []
         chg_all = []
         for atom in range(Natom):
             q_new = q_super[:, atom]
@@ -227,9 +229,10 @@ class geomParser():
             # print(np.min(q_check))
             if not np.min(q_check) < 1e-4:
                 q_all = np.append(q_all, np.transpose([q_new]), axis=1)
+                ele_all.append(ele_list[atom])
                 chg_all = np.append(chg_all, chg[atom])
 
-        return q_all, chg_all
+        return q_all, ele_all, chg_all
 
     def supercell_cut(self, q=None, ele_list=None, r=1.5):
         if q is None: q = self.q

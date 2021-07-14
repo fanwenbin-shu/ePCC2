@@ -1,0 +1,10 @@
+mol modselect 0 top not element X
+mol color Element
+mol selection not element X
+mol modstyle 0 top CPK 1.000000 0.300000 12.000000 12.000000
+mol material Opaque
+mol addrep top
+mol modselect 1 top element X
+mol modstyle 1 top Points 0.200000
+mol modcolor 1 top Beta
+pbc box -on

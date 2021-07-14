@@ -15,7 +15,7 @@ class gau_wrapper():
     def __get_sm(self, charge):
 
         if charge%2 == 0:
-            sm = 2
+            sm = 1
         else:
             sm = 1
 
@@ -81,6 +81,44 @@ class gau_wrapper():
             if element.upper() not in self.p3elements:
                 f.write('\n')
         f.write('y\n0\n0\nq\n')
+        f.close()
+
+        return
+
+    def write_pdb(self, path, file, q, ele_list, chg=None, lattice_para=None, q_super=None, ele_super=None, chg_super=None):
+
+        f = open(os.path.join(path, '{}.pdb'.format(file)), 'w')
+
+        f.write('TITLE      ePCC2 - calculating Polarized Crystal Charge (PCC)\n')
+        f.write('TITLE      Github : https://github.com/fanwenbin-shu/ePCC2')
+        f.write('REMARK     Program author : Wenbin FAN (fanwenbin@shu.edu.cn)\n')
+        if lattice_para is not None:
+            assert len(lattice_para) >= 6, 'Please provide lattice parameters `a,b,c,alpha,beta,gamma`! '
+            f.write('CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f}\n'.format(*lattice_para[:6]))
+
+        Natom = list(q.shape)[-1]
+        assert len(ele_list) >= Natom, 'Shape does not match. {} {}'.format(q.shape, len(ele_list))
+        if chg is None:
+            chg = [0] * Natom
+        for atom in range(Natom):
+            f.write('{:6s}{:5d} {:^4s}'.format('ATOM', atom+1, ele_list[atom]))
+            f.write('{:1s}{:3s} {:1s}{:4d}{:1s}   '.format('', 'MOL', '', 1, ''))
+            f.write('{:8.3f}{:8.3f}{:8.3f}'.format(*q[:,atom]))
+            f.write('{:6.2f}{:6.2f}          '.format(1.0, chg[atom]))
+            f.write('{:>2s}{:2s}\n'.format(ele_list[atom], ''))
+        f.write('TER\n')
+
+        if q_super is not None:
+            Nsuper = list(q_super.shape)[-1]
+            for atom in range(Nsuper):
+                f.write('{:6s}{:5d} {:^4s}'.format('ATOM', atom, ele_super[atom]))
+                f.write('{:1s}{:3s} {:1s}{:4d}{:1s}   '.format('', 'CHG', '', 1, ''))
+                f.write('{:8.3f}{:8.3f}{:8.3f}'.format(*q_super[:,atom]))
+                f.write('{:6.2f}{:6.2f} {:>4d}     '.format(1.0, chg_super[atom], atom + 1))
+                f.write('{:>2s}{:2s}\n'.format('X', ''))
+            f.write('TER\n')
+
+        f.write('END')
         f.close()
 
         return

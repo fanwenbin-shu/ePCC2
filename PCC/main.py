@@ -5,6 +5,7 @@ from .geom import *
 from .sym import *
 from .mist import check_os, print_header, get_alphabet
 from .util import cmd
+import logging
 
 class ePCC():
 
@@ -44,6 +45,7 @@ class ePCC():
         sym.judge_sym_mol(self.mol_list)
         self.sym_mol = sym.sym_mol
         self.Tmol = sym.Tmol
+        print(self.sym_mol)
 
         return
 
@@ -138,6 +140,9 @@ if [[ "${{chgcov}}" -eq 0 ]]; then
 exit; fi
                 '''.format(gau_file, gau_file, gau_file, gau_file, gau_file, gau_file, gau_file, gau_file)
             )
+        gau.write_pdb(path='d', file='0',
+                      lattice_para=self.lattice_para,
+                      q=self.q, ele_list=self.ele_list)
 
         s.close()
         return
@@ -208,14 +213,30 @@ exit; fi
             net_charge = sum([self.val[i] for i in atom_list])
             gau_file = self.sym_mol_name[i]
 
-            charge_q, charge = geom.exclude_q(q=q_mol, q_super=q_super, chg=chg_super)
+            charge_q, charge_ele, charge = geom.exclude_q(q=q_mol, q_super=q_super, chg=chg_super, ele_list=ele_super)
             gau.write_gjf(path=str(it), file=gau_file, oldchk='../{}/{}'.format(it-1, gau_file),
                           q=q_mol, ele_list=e_mol, net_charge=net_charge,
                           charge=charge, charge_q=charge_q)
+            gau.write_pdb(path=str(it), file=gau_file,
+                          lattice_para=self.lattice_para,
+                          q=q_mol, ele_list=e_mol, #chg=self.chg,
+                          q_super=charge_q, ele_super=charge_ele, chg_super=charge)
 
         cmd('cd {} && bash gau.sh > ePCC.log'.format(it))
 
         return
+
+    def __cov_check(self, it):
+
+        chg0 = self.__read_chg(it-1)
+        chg1 = self.__read_chg(it)
+
+        max_diff = np.max(abs(chg0 - chg1))
+        logging.info('Max difference : {:15.8f}'.format(max_diff))
+        if max_diff < max_diff_crt:
+            return True
+        else:
+            return False
 
     def main(self):
 
@@ -228,6 +249,7 @@ exit; fi
         while not cov:
             self.__it_calc(it)
             self.chg = self.__read_chg(it)
+            cov = self.__cov_check(it)
             it += 1
 
 
