@@ -1,7 +1,7 @@
 import os
 import sys
 from para import *
-from .const import val
+from .const import ename
 
 class gau_wrapper():
 
@@ -12,12 +12,17 @@ class gau_wrapper():
         self.p3elements = [i.upper() for i in p3elements]
         return
 
-    def __get_sm(self, charge):
+    def __get_sm(self, ele_list, charge):
 
-        if charge%2 == 0:
+        total = 0
+        for ele in ele_list:
+            total += ename.index(ele) + 1
+
+        total += charge
+        if total%2 == 0:
             sm = 1
         else:
-            sm = 1
+            sm = 2
 
         return sm
 
@@ -49,7 +54,7 @@ class gau_wrapper():
         f.write('\n\n')
         f.write('PCC calculation, written by Wenbin FAN')
         f.write('\n\n')
-        f.write('{} {}\n'.format(int(net_charge), int(self.__get_sm(net_charge)) ))
+        f.write('{} {}\n'.format(int(net_charge), int(self.__get_sm(ele_list, net_charge)) ))
 
         for i in range(Natom):
             f.write('{}    {:18.12f}    {:18.12f}    {:18.12f}\n'.format(ele_list[i], *q[:,i]))

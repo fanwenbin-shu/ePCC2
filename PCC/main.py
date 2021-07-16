@@ -6,6 +6,7 @@ from .sym import *
 from .mist import check_os, print_header, get_alphabet
 from .util import cmd
 import logging
+import matplotlib.pyplot as plt
 
 class ePCC():
 
@@ -45,12 +46,12 @@ class ePCC():
         sym.judge_sym_mol(self.mol_list)
         self.sym_mol = sym.sym_mol
         self.Tmol = sym.Tmol
-        print(self.sym_mol)
+        logging.info(self.sym_mol)
 
         return
 
     def __init_calc(self):
-
+        logging.info('Initial calculation... ')
         if not os.path.exists('0'):
             os.mkdir('0')
 
@@ -152,8 +153,8 @@ exit; fi
         chg_all = np.empty(self.Natom)
         chg_all[:] = np.nan
 
-        chg = []
         for i in range(self.Tmol): # loop types of mol
+            chg = []
             if ext == 'chg':
                 chg_path = os.path.join(str(it), '{}.chg'.format(self.sym_mol_name[i]))
                 chg_file = open(chg_path, 'r').readlines()
@@ -191,7 +192,7 @@ exit; fi
         return chg_all
 
     def __it_calc(self, it):
-        print('Iteration : {}'.format(it))
+        logging.info('Iteration : {}'.format(it))
 
         if not os.path.exists(str(it)):
             os.mkdir(str(it))
@@ -230,6 +231,7 @@ exit; fi
 
         chg0 = self.__read_chg(it-1)
         chg1 = self.__read_chg(it)
+        logging.info('Sum of charge : {:15.8f}'.format(sum(chg1)))
 
         max_diff = np.max(abs(chg0 - chg1))
         logging.info('Max difference : {:15.8f}'.format(max_diff))
@@ -237,6 +239,32 @@ exit; fi
             return True
         else:
             return False
+
+    def __plot_cov(self, it):
+        chg = np.empty([self.Natom, it+1])
+        chg_dif = np.empty([self.Natom, it])
+        for i in range(it+1):
+            chg[:, i] = self.__read_chg(i)
+            if i > 0:
+                chg_dif[:, i-1] = np.abs(chg[:, i] - chg[:, i-1])
+
+        x = list(range(it+1))
+        uniq_atom = []
+        for i in range(self.Tmol): # loop symmetry molecule list
+            imol = self.sym_mol[i][0] # select first molecule in each sym mol group
+            uniq_atom += self.mol_list[imol]
+
+        for j in uniq_atom:
+            plt.plot(x, chg[j, :])
+        plt.savefig('charge_evolution.svg', format='svg')
+        plt.close()
+
+        for j in uniq_atom:
+            plt.plot(x[1:], chg_dif[j, :])
+        plt.yscale('log')
+        plt.savefig('charge_evolution_difference.svg', format='svg')
+
+        return
 
     def main(self):
 
@@ -252,5 +280,7 @@ exit; fi
             cov = self.__cov_check(it)
             it += 1
 
+        if cov:
+            self.__plot_cov(it-1)
 
         return
