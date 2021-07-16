@@ -95,7 +95,7 @@ class gau_wrapper():
         f = open(os.path.join(path, '{}.pdb'.format(file)), 'w')
 
         f.write('TITLE      ePCC2 - calculating Polarized Crystal Charge (PCC)\n')
-        f.write('TITLE      Github : https://github.com/fanwenbin-shu/ePCC2')
+        f.write('TITLE      Github : https://github.com/fanwenbin-shu/ePCC2\n')
         f.write('REMARK     Program author : Wenbin FAN (fanwenbin@shu.edu.cn)\n')
         if lattice_para is not None:
             assert len(lattice_para) >= 6, 'Please provide lattice parameters `a,b,c,alpha,beta,gamma`! '

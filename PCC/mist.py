@@ -33,7 +33,7 @@ def log_format():
 
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] %(message)s")
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     fileHandler = logging.FileHandler("PyPCC.log")
     fileHandler.setFormatter(logFormatter)

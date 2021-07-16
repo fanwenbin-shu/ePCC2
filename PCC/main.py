@@ -266,6 +266,14 @@ exit; fi
 
         return
 
+    def __format_print(self):
+
+        geom = geomParser()
+        geom.igeom(self.Natom, self.ele_list, self.q, self.lattice_const)
+        geom.write_mol_pdb(Nim=Nim_out, mol_list=self.mol_list, sym_mol=self.sym_mol)
+
+        return
+
     def main(self):
 
         self.__read_stru(stru_file, space_group)
@@ -282,5 +290,6 @@ exit; fi
 
         if cov:
             self.__plot_cov(it-1)
+            self.__format_print()
 
         return

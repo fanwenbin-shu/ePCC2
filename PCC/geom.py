@@ -2,8 +2,10 @@ import os.path
 import numpy as np
 import logging
 from .util import const2para, find_mol_graph
+from .util import get_pbc_list
 from .const import covr
 from .const import val as val_default
+from .mist import get_alphabet
 
 class geomParser():
 
@@ -178,7 +180,6 @@ class geomParser():
         if Nim is None: Nim = [1, 1, 1]
         if chg is None: chg = np.zeros(self.Natom)
 
-        from .util import get_pbc_list
         Nx = get_pbc_list(Nim[0])
         Ny = get_pbc_list(Nim[1])
         Nz = get_pbc_list(Nim[2])
@@ -267,3 +268,55 @@ class geomParser():
 
         return
 
+    def write_mol_pdb(self, mol_list, sym_mol, path=None, Nim=None):
+        if path is None: path = '.'
+        if Nim is None: Nim = [1, 1, 1]
+        assert len(Nim) == 3, 'Wrong shape of image list. '
+
+        f = open(os.path.join(path, 'mol.pdb'), 'w')
+        print(os.path.join(path, 'mol.pdb'))
+        real_box = [(Nim[i]*2+1) * self.lattice_para[i] for i in range(3)]
+        f.write('CRYST1{:9.3f}{:9.3f}{:9.3f}{:7.2f}{:7.2f}{:7.2f}\n'.format(*real_box[:], *self.lattice_para[3:6]))
+
+        Nx = get_pbc_list(Nim[0])
+        Ny = get_pbc_list(Nim[1])
+        Nz = get_pbc_list(Nim[2])
+
+        q = np.dot(self.lattice_inv, self.q) # to fraction
+        q = np.add(q, np.array(Nim, dtype=float)[:, None]) # to real center
+        q = np.dot(self.lattice_const, q) # to Cartesian
+
+        # get single atom list
+        Natom = list(q.shape)[-1]
+        all_atom = list(range(Natom))
+        mol_atom = [item for sublist in mol_list for item in sublist]
+        single_atom = list(set(all_atom) - set(mol_atom))
+        mol_list.append(single_atom)
+        print(np.max(np.max(sym_mol)) + 1)
+        sym_mol.append([np.max(np.max(sym_mol)) + 1])
+
+        Tmol = len(sym_mol)
+        mol_name = [get_alphabet(i) for i in range(Tmol)]
+
+        atom = 0
+        for x in Nx:
+            for y in Ny:
+                for z in Nz:
+                    shift = np.dot([x,y,z], self.lattice_const)
+                    q_shift = np.add(q, shift[:, None])
+                    for i in range(Tmol): # sym mol list
+                        for j in sym_mol[i]: # sym mol
+                            atom_list = mol_list[j]
+                            for k in atom_list:
+                                f.write('{:6s}{:5d} {:^4s}'.format('ATOM', atom + 1, self.ele_list[k]))
+                                f.write('{:1s}{:<3s} {:1s}{:4d}{:1s}   '.format('', mol_name[i], '', 1, ''))
+                                f.write('{:8.3f}{:8.3f}{:8.3f}'.format(*q_shift[:, k]))
+                                f.write('{:6.2f}{:6.2f}          '.format(1.0, 1.0))
+                                f.write('{:>2s}{:2s}\n'.format(self.ele_list[k], ''))
+                                atom += 1
+                            f.write('TER\n')
+
+        f.write('END')
+        f.close()
+
+        return

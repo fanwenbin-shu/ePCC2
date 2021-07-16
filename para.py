@@ -1,14 +1,11 @@
 # path of structure file
 stru_file = 'CONTCAR'
 # number of images in each axis
-Nim = [1, 1, 1]
+Nim = [1, 1, 1] # in calculating PCC
+Nim_out = [1, 1, 1] # in output
 # space group
 space_group = 113
 
-# charge, for Gaussian calculation
-charge = 5
-# spin multiplicity
-sm = 1
 # Gaussian route card
 gau_memory = 4 # unit : GB
 gau_nprocs = 8
