@@ -268,7 +268,7 @@ class geomParser():
 
         return
 
-    def write_mol_pdb(self, mol_list, sym_mol, path=None, Nim=None):
+    def write_mol_pdb(self, mol_list, sym_mol, path=None, Nim=None, chg=None):
         if path is None: path = '.'
         if Nim is None: Nim = [1, 1, 1]
         assert len(Nim) == 3, 'Wrong shape of image list. '
@@ -289,11 +289,13 @@ class geomParser():
         # get single atom list
         Natom = list(q.shape)[-1]
         all_atom = list(range(Natom))
-        mol_atom = [item for sublist in mol_list for item in sublist]
+        mol_atom = [item for sublist in mol_list for item in sublist] # flatten
         single_atom = list(set(all_atom) - set(mol_atom))
         mol_list.append(single_atom)
-        print(np.max(np.max(sym_mol)) + 1)
-        sym_mol.append([np.max(np.max(sym_mol)) + 1])
+        sym_mol.append([max([item for sublist in sym_mol for item in sublist]) + 1])
+
+        if chg is None:
+            chg = np.zeros(Natom)
 
         Tmol = len(sym_mol)
         mol_name = [get_alphabet(i) for i in range(Tmol)]
@@ -311,7 +313,7 @@ class geomParser():
                                 f.write('{:6s}{:5d} {:^4s}'.format('ATOM', atom + 1, self.ele_list[k]))
                                 f.write('{:1s}{:<3s} {:1s}{:4d}{:1s}   '.format('', mol_name[i], '', 1, ''))
                                 f.write('{:8.3f}{:8.3f}{:8.3f}'.format(*q_shift[:, k]))
-                                f.write('{:6.2f}{:6.2f}          '.format(1.0, 1.0))
+                                f.write('{:6.2f}{:6.2f}          '.format(1.0, chg[k]))
                                 f.write('{:>2s}{:2s}\n'.format(self.ele_list[k], ''))
                                 atom += 1
                             f.write('TER\n')

@@ -270,7 +270,7 @@ exit; fi
 
         geom = geomParser()
         geom.igeom(self.Natom, self.ele_list, self.q, self.lattice_const)
-        geom.write_mol_pdb(Nim=Nim_out, mol_list=self.mol_list, sym_mol=self.sym_mol)
+        geom.write_mol_pdb(Nim=Nim_out, mol_list=self.mol_list, sym_mol=self.sym_mol, chg=self.chg)
 
         return
 
